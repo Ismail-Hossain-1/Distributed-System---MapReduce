@@ -157,3 +157,116 @@ hadoop jar wordcount.jar WordCount /input/path /output/path
 ---
 
 Let me know if you want a ready-to-run example you can test locally (with input/output files), or if you're using a cluster like AWS EMR or a local Hadoop setup.
+
+
+
+
+
+
+Great question! The generic types in `extends Mapper<...>` and `extends Reducer<...>` **are NOT fixed** — they are fully customizable based on your data.
+
+---
+
+## 📌 Quick Rule:
+
+```java
+Mapper<INPUT_KEY, INPUT_VALUE, OUTPUT_KEY, OUTPUT_VALUE>
+Reducer<INPUT_KEY, INPUT_VALUE, OUTPUT_KEY, OUTPUT_VALUE>
+```
+
+You define these types based on:
+
+* What kind of data is being **read**
+* What kind of key/value you want to **emit**
+
+---
+
+## 🔍 Example: Word Count
+
+```java
+Mapper<Object, Text, Text, IntWritable>
+```
+
+### Why?
+
+| Type          | Meaning                                  |
+| ------------- | ---------------------------------------- |
+| `Object`      | Input key (offset of the line, not used) |
+| `Text`        | Input value (entire line of text)        |
+| `Text`        | Output key (each word)                   |
+| `IntWritable` | Output value (count = 1)                 |
+
+### Reducer:
+
+```java
+Reducer<Text, IntWritable, Text, IntWritable>
+```
+
+| Type          | Meaning                    |
+| ------------- | -------------------------- |
+| `Text`        | Input key (a word)         |
+| `IntWritable` | Input values (list of 1s)  |
+| `Text`        | Output key (word)          |
+| `IntWritable` | Output value (total count) |
+
+---
+
+## 🧠 So, How to Decide?
+
+Ask yourself these questions:
+
+### **1. What is your input format?**
+
+Default: Line-by-line from text file
+
+* Then: `Mapper<Object, Text, ..., ...>`
+
+### **2. What do you want your mapper to emit?**
+
+Example:
+
+* Counting visits per IP → `Mapper<Object, Text, Text (IP), IntWritable (1)>`
+* Sales sum → `Mapper<Object, Text, Text (ProductID), FloatWritable (Price)>`
+
+### **3. What keys and values does your reducer expect to process?**
+
+* It receives **all values grouped by key**
+* Output can be anything:
+
+  * `Text`, `IntWritable`, `FloatWritable`, `NullWritable`, etc.
+
+---
+
+## 🧪 Example 2: Summing Sales by Product
+
+Assume CSV: `productId,price`
+
+```java
+Mapper<Object, Text, Text, FloatWritable>
+Reducer<Text, FloatWritable, Text, FloatWritable>
+```
+
+* Mapper emits: `<productId, price>`
+* Reducer receives: `<productId, list of prices>` → sums → emits total sales
+
+---
+
+## ✅ Writable Types You Can Use
+
+| Java Type | Hadoop Type      |
+| --------- | ---------------- |
+| `int`     | `IntWritable`    |
+| `long`    | `LongWritable`   |
+| `float`   | `FloatWritable`  |
+| `double`  | `DoubleWritable` |
+| `String`  | `Text`           |
+| null      | `NullWritable`   |
+
+---
+
+## 💡 Final Tip
+
+When unsure, print debug output inside `map()` and `reduce()` to test what keys and values are flowing.
+
+Would you like a small practice challenge to try customizing this?
+

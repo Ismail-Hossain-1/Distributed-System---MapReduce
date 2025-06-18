@@ -329,3 +329,234 @@ Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
 Let me know if you want a template to follow for any custom logic (e.g., sales, weather data, etc.).
 
 
+|---|
+| |
+|---|
+
+Excellent — now we're digging into the **heart of the Reducer logic**, where Hadoop actually processes those **"arrays"** (really, `Iterable<IntWritable>`) that it grouped from the Mapper's output.
+
+Let’s walk through it clearly.
+
+---
+
+## ✅ Here's the Key Reducer Code Again:
+
+```java
+public static class AvgWordLengthReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    private int totalLength = 0;
+    private int totalCount = 0;
+
+    public void reduce(Text key, Iterable<IntWritable> values, Context context)
+            throws IOException, InterruptedException {
+        int sum = 0;
+        for (IntWritable val : values) {
+            sum += val.get();  // <- This is where the addition happens
+        }
+
+        if (key.toString().equals("length")) {
+            totalLength = sum;
+        } else if (key.toString().equals("count")) {
+            totalCount = sum;
+        }
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        if (totalCount > 0) {
+            int avg = totalLength / totalCount;
+            context.write(new Text("Average Word Length"), new IntWritable(avg));
+        }
+    }
+}
+```
+
+---
+
+## ✅ Now Let's Break It Down
+
+### 🔹 1. **This method is called once for each key (e.g., "length", "count"):**
+
+```java
+public void reduce(Text key, Iterable<IntWritable> values, Context context)
+```
+
+* Hadoop guarantees that **all values with the same key are grouped and passed together**.
+* You can think of `values` as an array:
+
+  * If `key == "length"` → `values = [4, 5, 6, 7, ...]`
+  * If `key == "count"`  → `values = [1, 1, 1, 1, ...]`
+
+---
+
+### 🔹 2. **This loop handles the actual addition:**
+
+```java
+int sum = 0;
+for (IntWritable val : values) {
+    sum += val.get();
+}
+```
+
+* This sums up the elements of the "array"
+* Once the sum is computed, we store it in a class variable
+
+---
+
+### 🔹 3. **This part checks which key we are processing:**
+
+```java
+if (key.toString().equals("length")) {
+    totalLength = sum;
+} else if (key.toString().equals("count")) {
+    totalCount = sum;
+}
+```
+
+* So if the Reducer is handling `"length"` key group, it sets `totalLength`
+* If it's the `"count"` key group, it sets `totalCount`
+
+---
+
+### 🔹 4. **Then in `cleanup()` we calculate and output the result:**
+
+```java
+int avg = totalLength / totalCount;
+context.write(new Text("Average Word Length"), new IntWritable(avg));
+```
+
+* This happens **after** all `reduce()` calls are complete
+* It's used when you want to **output something after aggregating multiple keys**
+
+---
+
+## ✅ Summary Table
+
+| Role                        | Code                             | Description                              |
+| --------------------------- | -------------------------------- | ---------------------------------------- |
+| Handle grouped values       | `for (IntWritable val : values)` | Iterate like an array                    |
+| Sum values                  | `sum += val.get();`              | Adds up word lengths or counts           |
+| Track totals by key type    | `if (key.equals(...))`           | Distinguish between "length" and "count" |
+| Output after all reductions | `cleanup()` method               | Outputs final average                    |
+
+---
+
+## 🧠 Visualization
+
+Mapper output:
+
+```
+("length", 4)
+("count", 1)
+("length", 5)
+("count", 1)
+("length", 6)
+("count", 1)
+```
+
+Reducer receives:
+
+```
+"length" → [4, 5, 6]   → sum = 15
+"count"  → [1, 1, 1]   → sum = 3
+```
+
+Then:
+
+```
+avg = 15 / 3 = 5
+```
+
+Output:
+
+```
+("Average Word Length", 5)
+```
+
+---
+
+
+---
+
+ **the Reducer's `reduce()` method runs once per key**, **not once per all keys combined.**
+
+---
+
+### How it actually works:
+
+* Hadoop groups the mapper outputs by key.
+* For each unique key, Hadoop calls **`reduce(key, Iterable<values>, context)` once**.
+* So, **the for-loop inside `reduce()` processes *only the values for that one key*.**
+
+---
+
+### So:
+
+* First, Hadoop calls:
+
+```java
+reduce("count", Iterable of all count values, context)
+```
+
+The for-loop sums **all the counts** (like 1 + 1 + 1 + ...), then you assign:
+
+```java
+totalCount = sum;
+```
+
+* Then, Hadoop calls:
+
+```java
+reduce("length", Iterable of all length values, context)
+```
+
+The for-loop sums **all the lengths** (like 4 + 5 + 6 + ...), then you assign:
+
+```java
+totalLength = sum;
+```
+
+---
+
+### To summarize:
+
+| Call # | Key      | Values             | What happens inside `reduce()`        |
+| ------ | -------- | ------------------ | ------------------------------------- |
+| 1      | "count"  | \[1, 1, 1, 1, ...] | Sum all counts and set `totalCount`   |
+| 2      | "length" | \[4, 5, 6, 7, ...] | Sum all lengths and set `totalLength` |
+
+---
+
+### So the for-loop **only sums the values for one key at a time**, not both keys in the same call.
+
+---
+
+### That's why:
+
+```java
+if (key.toString().equals("length")) {
+    totalLength = sum;
+} else if (key.toString().equals("count")) {
+    totalCount = sum;
+}
+```
+
+happens **after the summation for that key only.**
+
+---
+
+### Then after both calls have finished (i.e., after all keys processed),
+
+the `cleanup()` method runs — which uses the stored `totalLength` and `totalCount` to calculate the average and write the final output.
+
+---
+
+### So the lifecycle is like this:
+
+1. `reduce("count", [...])` → sums counts → sets `totalCount`
+2. `reduce("length", [...])` → sums lengths → sets `totalLength`
+3. `cleanup()` → calculates and outputs average
+
+---
+
+
+

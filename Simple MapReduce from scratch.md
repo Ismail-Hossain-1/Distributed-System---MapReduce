@@ -270,3 +270,62 @@ When unsure, print debug output inside `map()` and `reduce()` to test what keys 
 
 Would you like a small practice challenge to try customizing this?
 
+|
+|
+|
+
+— the method signatures for `map()` and `reduce()` **must** have **exactly three parameters**:
+
+---
+
+## 🔹 `map()` Signature (always):
+
+```java
+map(KEYIN key, VALUEIN value, Context context)
+```
+
+* `KEYIN`: Input key (e.g., line offset)
+* `VALUEIN`: Input value (e.g., line of text)
+* `Context`: Used to emit output (`context.write(...)`)
+
+🟡 You **must not change the number of parameters**. The `Context` is required for Hadoop to interact with the mapper's output.
+
+---
+
+## 🔹 `reduce()` Signature (always):
+
+```java
+reduce(KEYIN key, Iterable<VALUEIN> values, Context context)
+```
+
+* `KEYIN`: The grouped key (e.g., a word)
+* `Iterable<VALUEIN>`: All values for that key (e.g., \[1, 1, 1])
+* `Context`: Used to emit reduced output
+
+Again, **fixed three parameters** — this is what Hadoop internally expects.
+
+---
+
+## ⛔️ You Cannot Do:
+
+* `map(Text a, Text b)` ← ❌ won't compile or run
+* `reduce(String key, List<IntWritable> vals)` ← ❌ invalid types + missing context
+
+---
+
+### ✅ Correct Customization Is:
+
+You **choose** the generic types in:
+
+```java
+Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
+Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>
+```
+
+…but the `map()` and `reduce()` method **must** follow the three-parameter structure.
+
+---
+
+Let me know if you want a template to follow for any custom logic (e.g., sales, weather data, etc.).
+
+

@@ -651,4 +651,64 @@ job.setOutputValueClass(IntWritable.class);
 
 
 
+## Here’s a list of the **most commonly used Hadoop and HDFS commands**, grouped by category, along with short descriptions.
+
+---
+
+## 🗂️ **Basic HDFS File System Commands**
+
+| Command                                        | Description                               |
+| ---------------------------------------------- | ----------------------------------------- |
+| `hdfs dfs -ls /path`                           | List files/directories in HDFS path       |
+| `hdfs dfs -mkdir /path`                        | Create directory in HDFS                  |
+| `hdfs dfs -put localfile /hdfs/path`           | Upload local file to HDFS                 |
+| `hdfs dfs -copyFromLocal localfile /hdfs/path` | Same as `-put`                            |
+| `hdfs dfs -get /hdfs/file localpath`           | Download HDFS file to local               |
+| `hdfs dfs -copyToLocal /hdfs/file localpath`   | Same as `-get`                            |
+| `hdfs dfs -cat /hdfs/file`                     | Display contents of HDFS file             |
+| `hdfs dfs -tail /hdfs/file`                    | Show last KB of a file                    |
+| `hdfs dfs -rm /hdfs/file`                      | Delete HDFS file                          |
+| `hdfs dfs -rm -r /hdfs/dir`                    | Recursively delete directory              |
+| `hdfs dfs -du -h /path`                        | Show space used by files (human readable) |
+| `hdfs dfs -df -h`                              | Show HDFS disk usage info                 |
+| `hdfs dfs -stat /hdfs/file`                    | Show file metadata (size, mod time, etc.) |
+
+---
+
+## 🔄 **File Operations & Permissions**
+
+| Command                            | Description                 |
+| ---------------------------------- | --------------------------- |
+| `hdfs dfs -chmod 755 /file`        | Change file permissions     |
+| `hdfs dfs -chown user:group /file` | Change file owner and group |
+| `hdfs dfs -mv /src /dest`          | Move/rename file in HDFS    |
+| `hdfs dfs -cp /src /dest`          | Copy file in HDFS           |
+
+---
+
+## 🔍 **Debugging and Admin**
+
+| Command                         | Description                       |
+| ------------------------------- | --------------------------------- |
+| `hdfs fsck /path`               | Check file system health          |
+| `hdfs dfsadmin -report`         | Summary of data nodes and storage |
+| `hdfs dfsadmin -safemode get`   | Check if NameNode is in safe mode |
+| `hdfs dfsadmin -safemode leave` | Exit safe mode                    |
+
+---
+
+## 🛠️ **Other Useful Commands**
+
+| Command          | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `hadoop version` | Show Hadoop version                         |
+| `hdfs dfs -help` | Get help for HDFS commands                  |
+| `yarn top`       | Monitor YARN container usage (if available) |
+
+---
+
+Would you like these in a downloadable **cheat sheet** format (PDF or Markdown)?
+
+
+
 

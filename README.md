@@ -1,3 +1,5 @@
+## Writing a MapReduce program **from scratch**
+
 Writing a MapReduce program **from scratch** (using Hadoop) involves understanding a few key concepts, classes, and structure. It’s not like regular Java development—you’re building **distributed data processing logic** that runs on multiple machines.
 
 ---

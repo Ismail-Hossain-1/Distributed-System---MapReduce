@@ -1,0 +1,7 @@
+# Ignore everything in target/
+target/*
+
+# Except jar files
+!target/*.jar
+.idea/
+
